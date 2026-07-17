@@ -14,9 +14,9 @@
 
 ## דרישות
 חובה שיהיה מותקן פייתון (3.8 לפחות).
-קודם כל נתקין את כל הספריות הדרושות:
+קודם כל נתקין את כל הספריות הדרושות דרך קובץ ה-requirements:
 ```bash
-pip install playwright nest_asyncio yt-dlp aiohttp aiofiles httpx pillow
+pip install -r requirements.txt
 ```
 
 חשוב גם להתקין את הדפדפן של Playwright (אחרת ההתחברות למודל לא תעבוד):
