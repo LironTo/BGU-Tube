@@ -22,6 +22,68 @@ MOODLE_LOGIN_URL = "https://moodle.bgu.ac.il/moodle/login/index.php"
 PROFILE_URL = "https://moodle.bgu.ac.il/moodle/user/profile.php"
 MAX_CONCURRENT_DOWNLOADS = 3
 
+# ---- Theme (colors taken from Media/Logo.png) ----
+LIGHT_BLUE = "#b6e9fd"   # window background - matches the logo background
+ORANGE = "#fe6f1c"       # primary actions / accents
+ORANGE_DARK = "#d95a10"  # hover / pressed
+WHITE = "#fefefe"        # cards / lists
+DARK_BLUE = "#001e26"    # text
+MUTED_BLUE = "#537b89"   # secondary text
+DISABLED_BG = "#cfe0e8"
+DISABLED_FG = "#8fa9b3"
+FONT = "Segoe UI"
+
+
+def setup_theme(root):
+    root.configure(bg=LIGHT_BLUE)
+    style = ttk.Style(root)
+    style.theme_use("clam")
+
+    style.configure("Primary.TButton", font=(FONT, 12, "bold"), padding=(24, 8),
+                    background=ORANGE, foreground=WHITE, bordercolor=ORANGE,
+                    borderwidth=0, focuscolor=WHITE)
+    style.map("Primary.TButton",
+              background=[("disabled", DISABLED_BG), ("pressed", ORANGE_DARK), ("active", ORANGE_DARK)],
+              foreground=[("disabled", DISABLED_FG)])
+
+    style.configure("Secondary.TButton", font=(FONT, 11), padding=(18, 6),
+                    background=WHITE, foreground=DARK_BLUE, bordercolor=MUTED_BLUE,
+                    borderwidth=1, focuscolor=DARK_BLUE)
+    style.map("Secondary.TButton",
+              background=[("disabled", DISABLED_BG), ("active", "#e8f6fd")],
+              foreground=[("disabled", DISABLED_FG)])
+
+    # במבנה clam תיבת הסימון נצבעת דרך indicatorbackground/indicatorforeground
+    checkbox_colors = dict(indicatorbackground=WHITE, indicatorforeground=WHITE,
+                           upperbordercolor=MUTED_BLUE, lowerbordercolor=MUTED_BLUE)
+    style.configure("Sky.TCheckbutton", font=(FONT, 12), background=LIGHT_BLUE,
+                    foreground=DARK_BLUE, focuscolor=LIGHT_BLUE, **checkbox_colors)
+    style.map("Sky.TCheckbutton",
+              background=[("active", LIGHT_BLUE)],
+              indicatorbackground=[("selected", ORANGE)])
+
+    style.configure("Card.TCheckbutton", font=(FONT, 12), background=WHITE,
+                    foreground=DARK_BLUE, focuscolor=WHITE, **checkbox_colors)
+    style.map("Card.TCheckbutton",
+              background=[("active", "#e8f6fd")],
+              indicatorbackground=[("selected", ORANGE)])
+
+    style.configure("BGU.Horizontal.TProgressbar", troughcolor=WHITE,
+                    background=ORANGE, bordercolor=LIGHT_BLUE,
+                    lightcolor=ORANGE, darkcolor=ORANGE, thickness=14)
+
+    style.configure("Vertical.TScrollbar", background=LIGHT_BLUE, troughcolor=WHITE,
+                    bordercolor=WHITE, arrowcolor=DARK_BLUE)
+    style.map("Vertical.TScrollbar", background=[("active", "#9dd9f2")])
+
+
+def course_header(parent, text):
+    # כותרת קורס בתוך רשימה: משולש "נגן" כתום בסגנון הלוגו לצד שם הקורס
+    row = Frame(parent, bg=WHITE)
+    Label(row, text="▶", font=(FONT, 11), bg=WHITE, fg=ORANGE).pack(side=LEFT, padx=(10, 6))
+    Label(row, text=text, font=(FONT, 13, "bold"), bg=WHITE, fg=DARK_BLUE).pack(side=LEFT)
+    row.pack(anchor="w", pady=(12, 2), fill="x")
+
 
 def sanitize_filename(name):
     return re.sub(r'[\\/*?:"<>|]', "", name).strip()
@@ -43,6 +105,7 @@ class BGUTubeApp:
         self.root = root
         self.root.title("BGU Tube")
         self.root.resizable(False, False)
+        setup_theme(self.root)
         self.course_vars = []
 
         self.browser = None
@@ -59,15 +122,19 @@ class BGUTubeApp:
         try:
             logo_path = os.path.join(BASE_DIR, "Media", "Logo.png")
             self.logo_img = ImageTk.PhotoImage(Image.open(logo_path).resize((180, 180)))
-            self.logo = Label(root, image=self.logo_img)
+            self.logo = Label(root, image=self.logo_img, bg=LIGHT_BLUE, bd=0)
+            self.root.iconphoto(True, self.logo_img)
         except:
-            self.logo = Label(root, text="BGU Tube", font=("Arial", 24, "bold"))
+            self.logo = Label(root, text="BGU Tube", font=(FONT, 24, "bold"), bg=LIGHT_BLUE, fg=DARK_BLUE)
         self.logo.pack(pady=10)
 
-        self.user_label = Label(root, text="שם משתמש", font=("Arial", 12))
-        self.user_entry = Entry(root, font=("Arial", 14))
-        self.pass_label = Label(root, text="סיסמה", font=("Arial", 12))
-        self.pass_entry = Entry(root, show="•", font=("Arial", 14))
+        entry_style = dict(font=(FONT, 13), bg=WHITE, fg=DARK_BLUE, relief=FLAT, bd=0,
+                           insertbackground=DARK_BLUE, highlightthickness=2,
+                           highlightbackground=WHITE, highlightcolor=ORANGE)
+        self.user_label = Label(root, text="שם משתמש", font=(FONT, 12), bg=LIGHT_BLUE, fg=DARK_BLUE)
+        self.user_entry = Entry(root, **entry_style)
+        self.pass_label = Label(root, text="סיסמה", font=(FONT, 12), bg=LIGHT_BLUE, fg=DARK_BLUE)
+        self.pass_entry = Entry(root, show="•", **entry_style)
 
         try:
             from Media.LoginInfo import USERNAME, PASSWORD
@@ -76,12 +143,12 @@ class BGUTubeApp:
         except:
             pass
 
-        self.login_btn = Button(root, text="התחבר", font=("Arial", 14), command=self.on_login)
+        self.login_btn = ttk.Button(root, text="התחבר", style="Primary.TButton", command=self.on_login)
 
-        self.course_frame = Frame(root)
-        self.canvas = Canvas(self.course_frame, bg="white")
-        self.scrollable_frame = Frame(self.canvas, bg="white")
-        self.scrollbar = Scrollbar(self.course_frame, orient=VERTICAL, command=self.canvas.yview)
+        self.course_frame = Frame(root, bg=LIGHT_BLUE)
+        self.canvas = Canvas(self.course_frame, bg=WHITE, highlightthickness=0)
+        self.scrollable_frame = Frame(self.canvas, bg=WHITE)
+        self.scrollbar = ttk.Scrollbar(self.course_frame, orient=VERTICAL, command=self.canvas.yview)
 
         self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
@@ -91,23 +158,24 @@ class BGUTubeApp:
         self.canvas.bind_all("<MouseWheel>", lambda e: self.canvas.yview_scroll(int(-1 * (e.delta / 120)), "units"))
         self.scrollable_frame.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
 
-        self.log_out = Button(self.root, text="התנתק", font=("Arial", 14), command=self.logout)
-        self.your_courses = Label(self.root, text="הקורסים שלך:", font=("Arial", 16))
-        self.course_count = Label(self.root, text="", font=("Arial", 12))
+        self.log_out = ttk.Button(self.root, text="התנתק", style="Secondary.TButton", command=self.logout)
+        self.your_courses = Label(self.root, text="הקורסים שלך:", font=(FONT, 17, "bold"),
+                                  bg=LIGHT_BLUE, fg=DARK_BLUE)
+        self.course_count = Label(self.root, text="", font=(FONT, 11), bg=LIGHT_BLUE, fg=MUTED_BLUE)
 
         self.select_all_var = IntVar()
-        self.select_all_chk = Checkbutton(self.root, text="בחר/י את כל הקורסים", variable=self.select_all_var,
-                                          font=("Arial", 12), command=self.toggle_select_all)
+        self.select_all_chk = ttk.Checkbutton(self.root, text="בחר/י את כל הקורסים", variable=self.select_all_var,
+                                              style="Sky.TCheckbutton", command=self.toggle_select_all)
 
-        self.show_selected_btn = Button(self.root, text="הצג קורסים שנבחרו", font=("Arial", 12),
-                                        command=self.show_selected_courses, state=DISABLED)
+        self.show_selected_btn = ttk.Button(self.root, text="הצג קורסים שנבחרו", style="Secondary.TButton",
+                                            command=self.show_selected_courses, state=DISABLED)
 
-        self.go_to_uploaders_btn = Button(self.root, text="עבור לבחירת מרצים", font=("Arial", 12),
-                                          command=self.go_to_uploaders_screen, state=DISABLED)
+        self.go_to_uploaders_btn = ttk.Button(self.root, text="עבור לבחירת מרצים", style="Primary.TButton",
+                                              command=self.go_to_uploaders_screen, state=DISABLED)
 
         self.selected_uploaders = {}
-        self.download_btn = Button(self.root, text="הורד/י הקלטות", font=("Arial", 12),
-                                   command=self.go_to_download_screen, state=DISABLED)
+        self.download_btn = ttk.Button(self.root, text="הורד/י הקלטות", style="Primary.TButton",
+                                       command=self.go_to_download_screen, state=DISABLED)
 
         self.progress = None
         self.download_button = None  # נשתמש בשם ברור יותר לכפתור ההורדה
@@ -126,9 +194,10 @@ class BGUTubeApp:
 
     def show_loading(self, text):
         self.hide_loading()
-        self.loading_label = Label(self.root, text=text, font=("Arial", 12))
+        self.loading_label = Label(self.root, text=text, font=(FONT, 12), bg=LIGHT_BLUE, fg=DARK_BLUE)
         self.loading_label.pack(pady=(10, 0))
-        self.loading_bar = ttk.Progressbar(self.root, mode="indeterminate", length=250)
+        self.loading_bar = ttk.Progressbar(self.root, mode="indeterminate", length=250,
+                                           style="BGU.Horizontal.TProgressbar")
         self.loading_bar.pack(pady=5)
         self.loading_bar.start(10)
 
@@ -233,8 +302,8 @@ class BGUTubeApp:
 
         for title, url in course_urls:
             var = IntVar()
-            chk = Checkbutton(self.scrollable_frame, text=title.strip(), variable=var, font=("Arial", 12),
-                              anchor="w", command=self.update_download_button_state)
+            chk = ttk.Checkbutton(self.scrollable_frame, text=title.strip(), variable=var,
+                                  style="Card.TCheckbutton", command=self.update_download_button_state)
             chk.pack(fill="x", padx=10, pady=2, anchor="w")
             self.course_vars.append((var, (title, url)))
 
@@ -276,12 +345,13 @@ class BGUTubeApp:
 
         print(f"[INFO] Moving to uploader selection screen with {len(self.selected_courses)} selected courses.")
         self.clean_up()
-        Label(self.root, text="בחר/י מרצים או מתרגלים", font=("Arial", 16)).pack(pady=10)
+        Label(self.root, text="בחר/י מרצים או מתרגלים", font=(FONT, 16, "bold"),
+              bg=LIGHT_BLUE, fg=DARK_BLUE).pack(pady=10)
 
-        uploader_frame = Frame(self.root)
-        canvas = Canvas(uploader_frame, bg="white")
-        scrollbar = Scrollbar(uploader_frame, orient=VERTICAL, command=canvas.yview)
-        inner_frame = Frame(canvas, bg="white")
+        uploader_frame = Frame(self.root, bg=LIGHT_BLUE)
+        canvas = Canvas(uploader_frame, bg=WHITE, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(uploader_frame, orient=VERTICAL, command=canvas.yview)
+        inner_frame = Frame(canvas, bg=WHITE)
 
         canvas.create_window((0, 0), window=inner_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
@@ -292,17 +362,17 @@ class BGUTubeApp:
         scrollbar.pack(side=RIGHT, fill=Y)
         uploader_frame.pack(fill=BOTH, expand=True, padx=10, pady=10)
 
-        self.download_btn = Button(self.root, text="הורד/י הקלטות", font=("Arial", 12),
-                                   state=DISABLED, command=self.go_to_download_screen)
+        self.download_btn = ttk.Button(self.root, text="הורד/י הקלטות", style="Primary.TButton",
+                                       state=DISABLED, command=self.go_to_download_screen)
         self.download_btn.pack(pady=5)
 
         self.show_loading("טוען רשימת מרצים ומתרגלים...")
 
         def render_course_uploaders(title, course_id, uploaders):
-            Label(inner_frame, text=title.strip(), font=("Arial", 14, "bold"), bg="white").pack(anchor="w", pady=(10, 0))
+            course_header(inner_frame, title.strip())
             if not uploaders:
-                Label(inner_frame, text="לא נמצאו הקלטות בקורס", font=("Arial", 12), bg="white", fg="red").pack(
-                    anchor="w", padx=20)
+                Label(inner_frame, text="לא נמצאו הקלטות בקורס", font=(FONT, 11), bg=WHITE, fg=ORANGE_DARK).pack(
+                    anchor="w", padx=27)
                 return
 
             # שמירת הבחירה של המרצים
@@ -310,9 +380,9 @@ class BGUTubeApp:
 
             for name, count in uploaders.items():
                 var = IntVar()
-                cb = Checkbutton(inner_frame, text=f"{name} ({count} הקלטות)", font=("Arial", 12), anchor="w",
-                                 bg="white", variable=var)
-                cb.pack(fill="x", anchor="w", padx=20)
+                cb = ttk.Checkbutton(inner_frame, text=f"{name} ({count} הקלטות)",
+                                     style="Card.TCheckbutton", variable=var)
+                cb.pack(fill="x", anchor="w", padx=27)
                 self.uploader_vars.append((var, name, course_id))
 
                 def update_state(v, uploader, cid):
@@ -395,12 +465,13 @@ class BGUTubeApp:
         print("[INFO] Moving to download screen...")
         self.clean_up()
 
-        Label(self.root, text="בחר/י הקלטות להורדה", font=("Arial", 16)).pack(pady=10)
+        Label(self.root, text="בחר/י הקלטות להורדה", font=(FONT, 16, "bold"),
+              bg=LIGHT_BLUE, fg=DARK_BLUE).pack(pady=10)
 
-        download_frame = Frame(self.root)
-        canvas = Canvas(download_frame, bg="white")
-        scrollbar = Scrollbar(download_frame, orient=VERTICAL, command=canvas.yview)
-        inner_frame = Frame(canvas, bg="white")
+        download_frame = Frame(self.root, bg=LIGHT_BLUE)
+        canvas = Canvas(download_frame, bg=WHITE, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(download_frame, orient=VERTICAL, command=canvas.yview)
+        inner_frame = Frame(canvas, bg=WHITE)
 
         canvas.create_window((0, 0), window=inner_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
@@ -421,18 +492,21 @@ class BGUTubeApp:
                 if url.endswith(f"id={course_id}"):
                     course_title = title
                     break
-            Label(inner_frame, text=course_title, font=("Arial", 14, "bold"), bg="white").pack(anchor="w", pady=(10, 0))
+            course_header(inner_frame, course_title)
 
             for uploader in uploaders:
-                Label(inner_frame, text=uploader, font=("Arial", 12), bg="white").pack(anchor="w", padx=20)
+                Label(inner_frame, text=uploader, font=(FONT, 12), bg=WHITE, fg=DARK_BLUE).pack(
+                    anchor="w", padx=27)
 
-        self.download_button = Button(self.root, text="התחל הורדה", font=("Arial", 14), command=self.start_downloads)
+        self.download_button = ttk.Button(self.root, text="התחל הורדה", style="Primary.TButton",
+                                          command=self.start_downloads)
         self.download_button.pack(pady=10)
 
     def start_downloads(self):
         print("[INFO] Starting downloads...")
         self.download_button.config(state=DISABLED)
-        self.progress = Progressbar(self.root, orient=HORIZONTAL, length=400, mode='determinate')
+        self.progress = Progressbar(self.root, orient=HORIZONTAL, length=400, mode='determinate',
+                                    style="BGU.Horizontal.TProgressbar")
         self.progress.pack(pady=10)
         self.show_loading("סורק הקלטות בקורסים שנבחרו...")
         asyncio.run_coroutine_threadsafe(self.perform_downloads(), self.loop)
