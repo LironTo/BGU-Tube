@@ -178,3 +178,5 @@ Media/LoginInfo.py
 downloads/*
 claude/
 CLAUDE.md
+page_dumps/
+error_*.png
