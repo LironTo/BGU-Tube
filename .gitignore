@@ -176,3 +176,5 @@ cython_debug/
 # Custom
 Media/LoginInfo.py
 downloads/*
+claude/
+CLAUDE.md

@@ -1,0 +1,7 @@
+playwright
+nest_asyncio
+yt-dlp
+aiohttp
+aiofiles
+httpx
+Pillow

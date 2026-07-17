@@ -552,10 +552,11 @@ class BGUTubeApp:
     async def download_mp4(self, url, output_path):
         try:
             async with httpx.AsyncClient(follow_redirects=True, timeout=30.0) as client:
-                response = await client.get(url)
-                response.raise_for_status()
-                with open(output_path, "wb") as f:
-                    f.write(response.content)
+                async with client.stream("GET", url) as response:
+                    response.raise_for_status()
+                    with open(output_path, "wb") as f:
+                        async for chunk in response.aiter_bytes():
+                            f.write(chunk)
             print(f"[SAVED] File saved to: {output_path}")
         except Exception as e:
             print(f"[ERROR] Failed to download mp4: {e}")
