@@ -21,7 +21,7 @@ pip install -r requirements.txt
 
 חשוב גם להתקין את הדפדפן של Playwright (אחרת ההתחברות למודל לא תעבוד):
 ```bash
-playwright install chromium
+python -m playwright install chromium
 ```
 
 ## איך מריצים
