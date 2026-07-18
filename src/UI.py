@@ -13,7 +13,12 @@ import httpx
 from tkinter.ttk import Progressbar
 from functools import partial
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if getattr(sys, 'frozen', False):
+    BASE_DIR = sys._MEIPASS
+    DOWNLOADS_DIR = os.path.join(os.path.dirname(sys.executable), 'downloads')
+else:
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    DOWNLOADS_DIR = os.path.join(BASE_DIR, 'downloads')
 sys.path.append(BASE_DIR)
 
 USERNAME = ""
@@ -683,7 +688,7 @@ class BGUTubeApp:
         tasks = []
         used_paths = set()
         for course_title, title, owner, video_page_url in recordings:
-            course_folder = os.path.join("downloads", sanitize_filename(course_title))
+            course_folder = os.path.join(DOWNLOADS_DIR, sanitize_filename(course_title))
             os.makedirs(course_folder, exist_ok=True)
             base_name = f"{sanitize_filename(title)} ! {sanitize_filename(owner)}"
             file_path = get_unique_filename(course_folder, base_name, used_paths)
@@ -750,7 +755,7 @@ class BGUTubeApp:
                    command=lambda: self.show_courses_screen(self.all_courses)).pack()
 
     def open_downloads_folder(self):
-        folder = os.path.abspath("downloads")
+        folder = os.path.abspath(DOWNLOADS_DIR)
         try:
             os.makedirs(folder, exist_ok=True)
             os.startfile(folder)
