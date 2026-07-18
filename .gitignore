@@ -178,6 +178,9 @@ cython_debug/
 Media/LoginInfo.py
 downloads/*
 claude/
+.claude/
 CLAUDE.md
 page_dumps/
 error_*.png
+.idea/
+docs/
