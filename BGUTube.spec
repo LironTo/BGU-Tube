@@ -37,7 +37,7 @@ a = Analysis(
     ],
     hookspath=['build_hooks'],
     runtime_hooks=['build_hooks/playwright_env.py'],
-    excludes=[],
+    excludes=['Media.LoginInfo'],  # gitignored dev credentials — must never ship in the exe
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=block_cipher,

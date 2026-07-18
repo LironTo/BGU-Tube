@@ -298,7 +298,7 @@ class BGUTubeApp:
         if page is None:
             return
         try:
-            path = os.path.join(BASE_DIR, f"error_{name}.png")
+            path = os.path.join(os.path.dirname(DOWNLOADS_DIR), f"error_{name}.png")
             await page.screenshot(path=path)
             print(f"[WARN] Screenshot saved to: {path}")
         except Exception as e:
